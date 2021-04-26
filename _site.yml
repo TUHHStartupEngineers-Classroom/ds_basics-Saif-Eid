@@ -8,7 +8,7 @@ navbar:
     - text: "Index"
       href: index.html
     - text: "Journal"
-      menu:
+      menu: 
             - text: "01 Tidyverse"
               href: 01_tidyverse.html
             - text: "02 Data Acquisition"
