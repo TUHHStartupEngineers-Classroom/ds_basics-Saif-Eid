@@ -75,7 +75,7 @@ bike_name_tbl_2 <- html_bike_category_2 %>%
 bike_price_tbl_2 <- html_bike_category_2 %>%
   html_nodes(css = '.catalog-category-bikes__price-title') %>%
   html_text2() %>%
-  stringr::str_remove(pattern = "[a-z]") %>% 
+  stringr::str_remove(pattern = "[a-z]") %>%  
   stringr::str_remove(pattern = "[a-z]") %>% 
   stringr::str_remove(pattern = "[a-z]") %>% 
   stringr::str_remove(pattern = "[a-z]") %>% 

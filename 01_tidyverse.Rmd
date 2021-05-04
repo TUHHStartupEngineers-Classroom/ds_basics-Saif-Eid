@@ -1,6 +1,5 @@
 ---
 title: "01 Intro to the tidyverse"
-author: "Joschka Schwarz"
 date: "2021-04"
 output:
   html_document:
