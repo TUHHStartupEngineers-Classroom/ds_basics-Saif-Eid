@@ -15,9 +15,9 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(message=FALSE,warning=FALSE, cache=TRUE)
 ```
-# Challenge #1
-
-## Most recent tweets about Covid-19 (#Covid-19) retrieved from twitter
+# Data Acquisition
+## Challenge #1
+### Most recent tweets about Covid-19 (#Covid-19) retrieved from twitter
 
 ```{r}
 library(httr)
@@ -52,7 +52,6 @@ reactable(tweet_data_table,
 ```
 
 # Challenge #2
-
 ## Data from endurance bikes scraped from the "rosebikes" website
 
 ```{r}

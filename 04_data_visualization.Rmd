@@ -15,40 +15,98 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(message=FALSE,warning=FALSE, cache=TRUE)
 ```
-
-**IMPORTANT:** You can delete everything in here and start fresh. You might want to start by not deleting anything above this line until you know what that stuff is doing.
-
-This is an `.Rmd` file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a \# in front of your text, it will create a top level-header.
-
-# My first post
-
-Last compiled: `r Sys.Date()`
-
-Notice that whatever you define as a top level header, automatically gets put into the table of contents bar on the left. 
-
-## Second level header
-
-You can add more headers by adding more hashtags. These won't be put into the table of contents
-
-### third level header
-
-Here's an even lower level header
-
-# My second post (note the order)
-
-Last compiled: `r Sys.Date()`
-
-I'm writing this tutorial going from the top down. And, this is how it will be printed. So, notice the second post is second in the list. If you want your most recent post to be at the top, then make a new post starting at the top. If you want the oldest first, do, then keep adding to the bottom
-
-# Adding R stuff
-
-So far this is just a blog where you can write in plain text and serve your writing to a webpage. One of the main purposes of this lab journal is to record your progress learning R. The reason I am asking you to use this process is because you can both make a website, and a lab journal, and learn R all in R-studio. This makes everything really convenient and in the same place. 
-
-So, let's say you are learning how to make a histogram in R. For example, maybe you want to sample 100 numbers from a normal distribution with mean = 0, and standard deviation = 1, and then you want to plot a histogram. You can do this right here by using an r code block, like this:
+# Data Visualization 
+## First Question
+### Confirmed Covid-19 cases as of 08-05-2021 (in some countries)
 
 ```{r}
-samples <- rnorm(100, mean=0, sd=1)
-hist(samples)
+library(tidyverse)
+library(scales)
+library(ggplot2)
+library(dplyr)
+library(data.table)
+library(rvest) 
+library(magrittr)
+library(readr)
+library(lubridate)
+library (ggmap)
+
+covid_data_tbl_1 <- read_csv("https://covid.ourworldindata.org/data/owid-covid-data.csv")
+
+main_tbl <- covid_data_tbl_1 %>% select(date, location, total_cases) 
+sub_tbl <- main_tbl %>% filter(location == "Germany" | location == "France" | location == "Spain" | location == "United Kingdom" | location == "United States")
+
+plt <- ggplot(sub_tbl, aes(x=date, y = total_cases, group = location, colour = location)) + 
+  geom_line() +
+  theme_minimal() + 
+  labs( fill = "Continent / Country",
+    title = "Covid-19 confirmed cases worldwide",
+    subtitle = "As of 04/05/2021",
+    x = "Challenge 1",
+    y = "Cumulative Cases") +
+  scale_y_continuous(labels = scales::dollar_format(scale = 1/1e6, prefix = "", suffix = "M")) +
+  scale_x_date(breaks = date_breaks("months"), labels = date_format("%B'%y")) +
+  theme(axis.text.x = element_text(angle = 45)) + 
+  scale_colour_manual(values = c("darkorange1", "blueviolet", "deeppink", "lawngreen", "darkgoldenrod1")) +
+  geom_label(label =  "32,686,256",
+             vjust = 1, 
+             hjust = 1,
+             size  = 4,
+             fill  = "darkgoldenrod1",
+             color = "white",
+             fontface = "italic",
+             data = sub_tbl %>%
+               filter(location == "United States" & date >= as.Date("2021-05-08"))) 
+plt + theme(
+  legend.position = "bottom",
+  legend.box = "vertical"
+) 
 ```
 
-When you knit this R Markdown document, you will see that the histogram is printed to the page, along with the R code. This document can be set up to hide the R code in the webpage, just delete the comment (hashtag) from the cold folding option in the yaml header up top. For purposes of letting yourself see the code, and me see the code, best to keep it the way that it is. You'll learn that all of these things and more can be customized in each R code block.
+## Second Question
+### Mortality Rate of Covid-19 worldwide
+```{r}
+library(tidyverse)
+library(scales)
+library(ggplot2)
+library(dplyr)
+
+covid_data_tbl_1 <- read_csv("https://covid.ourworldindata.org/data/owid-covid-data.csv")
+
+tbl_1 <- covid_data_tbl_1 %>% select(date, location, total_deaths, population)
+tbl_2 <- tbl_1 %>% filter(date == as.Date("2021-05-04"))
+covid_2 <-  tbl_2 %>%
+  mutate(mortality = (total_deaths/population)) %>% 
+  rename(region = location) %>% 
+  mutate(region = case_when(
+    
+    region == "United Kingdom" ~ "UK",
+    region == "United States" ~ "USA",
+    region == "Democratic Republic of Congo" ~ "Democratic Republic of the Congo",
+    TRUE ~ region
+    
+  )) %>%
+  distinct()
+
+world_map <- map_data("world")
+
+combined <- world_map[covid_2$region %in% covid_2$region, ]
+combined$mort <- covid_2$mortality[match(combined$region, covid_2$region)]
+countries <- unique(combined$region)
+CDF <- data.frame(label1=countries)
+
+for(i in CDF){
+  combined$mort <- ifelse(combined$region %in% CDF$label1[i], (covid_2$mortality), combined$mort)
+}
+
+
+ ggplot(combined, aes(x=long, y=lat, group=group, fill=mort)) +
+  geom_polygon(colour = "white") +
+   scale_fill_gradient(low = "red", high = "red4", limits = c(-0.0005, 0.0025), labels = percent) +
+  theme_minimal() +
+  labs(fill="Mortality Rate (%)", title = "Confirmed COVID-19 deaths relative to the size of the population",
+       subtitle = "Around 3 Million confirmed COVID-19 deaths worldwide", x="Challenge 2", y="") +
+  scale_y_continuous(breaks = c()) +
+  scale_x_continuous(breaks = c()) +
+  theme(panel.border = element_blank())
+```

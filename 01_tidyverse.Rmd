@@ -15,13 +15,9 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(message=FALSE,warning=FALSE, cache=TRUE)
 ```
-
-# Challenge #1
-
-Last compiled: `r Sys.Date()`
-
-
-## Analysis based on States
+# Tidyverse
+## Challenge #1
+### Analysis based on States
 
 ```{r}
 library(lubridate)
@@ -60,10 +56,6 @@ sales_by_state_tbl_1 %>%
 
 
 # Challenge #2
-
-Last compiled: `r Sys.Date()`
-
-
 ## Analysis based on States and Year
 ```{r plot, fig.width=13, fig.height=10}
 sales_by_state_year_tbl <- bike_oderlines_wrangled_tbl %>%
