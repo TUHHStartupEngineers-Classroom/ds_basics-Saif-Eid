@@ -15,40 +15,88 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(message=FALSE,warning=FALSE, cache=TRUE)
 ```
-
-**IMPORTANT:** You can delete everything in here and start fresh. You might want to start by not deleting anything above this line until you know what that stuff is doing.
-
-This is an `.Rmd` file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a \# in front of your text, it will create a top level-header.
-
-# My first post
-
-Last compiled: `r Sys.Date()`
-
-Notice that whatever you define as a top level header, automatically gets put into the table of contents bar on the left. 
-
-## Second level header
-
-You can add more headers by adding more hashtags. These won't be put into the table of contents
-
-### third level header
-
-Here's an even lower level header
-
-# My second post (note the order)
-
-Last compiled: `r Sys.Date()`
-
-I'm writing this tutorial going from the top down. And, this is how it will be printed. So, notice the second post is second in the list. If you want your most recent post to be at the top, then make a new post starting at the top. If you want the oldest first, do, then keep adding to the bottom
-
-# Adding R stuff
-
-So far this is just a blog where you can write in plain text and serve your writing to a webpage. One of the main purposes of this lab journal is to record your progress learning R. The reason I am asking you to use this process is because you can both make a website, and a lab journal, and learn R all in R-studio. This makes everything really convenient and in the same place. 
-
-So, let's say you are learning how to make a histogram in R. For example, maybe you want to sample 100 numbers from a normal distribution with mean = 0, and standard deviation = 1, and then you want to plot a histogram. You can do this right here by using an r code block, like this:
+# Data Acquisition
+## Challenge #1
+### Most recent tweets about Covid-19 (#Covid-19) retrieved from twitter
 
 ```{r}
-samples <- rnorm(100, mean=0, sd=1)
-hist(samples)
+library(httr)
+library(rtweet)
+library(dplyr)
+library (reactable)
+library(rtweet)
+library(rstudioapi)
+library(glue) # Retrieving the relevant libraries
+  
+twitter_token <- create_token(app = "Saif187e", 
+                              consumer_key = keyring::key_get("my-database-2", "myusername"), 
+                              consumer_secret = keyring::key_get("my-database", "myusername"),
+                              access_token = keyring::key_get("my-database-3", "myusername"),
+                              access_secret = keyring::key_get("my-database-1", "myusername"),
+                              set_renv = TRUE) #Accessing twitter's API using the token
+
+tweet_df <- search_tweets("#Covid-19", n=10, include_rts = FALSE, token = NULL) # Searching for the latest 10 tweets about Covid-19
+tweets <- tweet_df %>% select(user_id, status_id, text, favorite_count, retweet_count, screen_name, created_at) # Selecting the desired analysis parameters 
+tweet_data_table <- select(tweets, -user_id, -status_id)
+
+reactable(tweet_data_table,
+          filterable = TRUE, searchable = TRUE, bordered = TRUE, striped = TRUE, highlight = TRUE, defaultPageSize = 25, showPageSizeOptions = TRUE, showSortable = TRUE, pageSizeOptions = c(25,50,75,100,200), defaultSortOrder = "desc",
+          columns = list(
+            text = colDef (html = TRUE, minWidth = 190, resizable = TRUE),
+            favorite_count = colDef (filterable = FALSE),
+            retweet_count = colDef (filterable = FALSE),
+            screen_name = colDef(defaultSortOrder = "asc"),
+            created_at = colDef(defaultSortOrder = "asc")
+          ) # table creation using the reactable () function
+)
 ```
 
-When you knit this R Markdown document, you will see that the histogram is printed to the page, along with the R code. This document can be set up to hide the R code in the webpage, just delete the comment (hashtag) from the cold folding option in the yaml header up top. For purposes of letting yourself see the code, and me see the code, best to keep it the way that it is. You'll learn that all of these things and more can be customized in each R code block.
+# Challenge #2
+## Data from endurance bikes scraped from the "rosebikes" website
+
+```{r}
+library(tidyverse) 
+library(rvest)     
+library(xopen)     
+library(jsonlite)  
+library(glue)      
+library(stringi) # Retrieving the relevant libraries
+ 
+url_2 <- "https://www.rosebikes.com/bikes/road/endurance" #Assigning the url manually (since it's only one category)
+
+html_bike_category_2 <- read_html(url_2)
+
+bike_name_tbl_2 <- html_bike_category_2 %>%
+  html_nodes(css = '.catalog-category-bikes__title-text') %>%
+  html_text2() %>%
+  enframe(name = "position", value = "model name") # Retrieving the model names from the url
+
+bike_price_tbl_2 <- html_bike_category_2 %>%
+  html_nodes(css = '.catalog-category-bikes__price-title') %>%
+  html_text2() %>%
+  stringr::str_remove(pattern = "[a-z]") %>%  
+  stringr::str_remove(pattern = "[a-z]") %>% 
+  stringr::str_remove(pattern = "[a-z]") %>% 
+  stringr::str_remove(pattern = "[a-z]") %>% 
+  stringr::str_remove(pattern = "[^a-zA-Z0-9_]") %>% 
+  stringr::str_remove(pattern = "[^a-zA-Z0-9_]") %>% 
+  enframe(name = "position", value = "price in Euros")  # Retrieving the prices from the url
+
+bike_desc_tbl_2 <- html_bike_category_2 %>%
+  html_nodes(css = '.catalog-category-bikes__subtitle') %>%
+  html_text2() %>%
+  enframe(name = "position", value = "description") # Retrieving the descriptions from the url
+
+bike_url_tbl_2  <- html_bike_category_2 %>%
+    html_nodes(css = ".row .align-middle > a") %>%
+    html_attr("href") %>%
+    str_remove(pattern = "\\?.*") %>%
+    enframe(name = "position", value = "subdirectory") # Retrieving the relevant url subdirectories for each bike model
+
+bike_data_tbl_2 <- (bike_name_tbl_2) %>% 
+  left_join(bike_price_tbl_2) %>%
+  left_join(bike_desc_tbl_2) %>% 
+  left_join(bike_url_tbl_2) # organizing data in a table
+
+bike_data_tbl_2
+```
